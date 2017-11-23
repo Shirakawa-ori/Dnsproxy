@@ -9,7 +9,6 @@ import os
 import re
 
 class query_DNS:
-
     @staticmethod
     def domain_to_ip(dnsserver,domain):
         seqid = os.urandom(2)
@@ -87,7 +86,8 @@ class SinDNSUDPHandler(SocketServer.BaseRequestHandler):
             else:
                 try:
                     qdns = query_DNS
-                    reip = qdns.domain_to_ip('8.8.8.8','www.baidu.com')
+                    #reip = qdns.domain_to_ip('8.8.8.8','www.baidu.com')
+                    reip = qdns.domain_to_ip('8.8.8.8',name)    #DNServer
                     toip = reip[0] if 0 < len(reip) else None
                     ifrom = "sev"
                     sev.redisaddname(name, toip)
