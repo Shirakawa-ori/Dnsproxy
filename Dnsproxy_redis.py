@@ -4,6 +4,24 @@ import SocketServer
 import struct
 import socket as socketlib
 import redis
+import socket
+import os
+import re
+
+class query_DNS:
+
+    @staticmethod
+    def domain_to_ip(dnsserver,domain):
+        seqid = os.urandom(2)
+        host = ''.join(chr(len(x))+x for x in domain.split('.'))
+        data = '%s\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00%s\x00\x00\x01\x00\x01' % (seqid, host)
+        sock = socket.socket(socket.AF_INET,type=socket.SOCK_DGRAM)
+        sock.settimeout(20)
+        sock.sendto(data, (dnsserver, 53))
+        data = sock.recv(512)
+        assert isinstance(data, basestring)
+        iplist = ['.'.join(str(ord(x)) for x in s) for s in re.findall('\xc0.\x00\x01\x00\x01.{6}(.{4})', data) if all(ord(x) <= 255 for x in s)]
+        return iplist
 
 class SinDNSQuery:
     def __init__(self, data):
@@ -68,7 +86,9 @@ class SinDNSUDPHandler(SocketServer.BaseRequestHandler):
                 toip = str(rs.get(name))
             else:
                 try:
-                    toip = socketlib.getaddrinfo(name,0)[0][4][0]
+                    qdns = query_DNS
+                    reip = qdns.domain_to_ip('8.8.8.8','www.baidu.com')
+                    toip = reip[0] if 0 < len(reip) else None
                     ifrom = "sev"
                     sev.redisaddname(name, toip)
                 except Exception, e:
