@@ -79,7 +79,7 @@ class SinDNSUDPHandler(SocketServer.BaseRequestHandler):
         socket = self.request[1]
         if(dns.query.type==1):
             name = dns.getname();
-            toip = None
+            toip = 'None'
             ifrom = "map"
             if (int(rs.exists(name)) == 1):
                 toip = str(rs.get(name))
@@ -90,16 +90,7 @@ class SinDNSUDPHandler(SocketServer.BaseRequestHandler):
                     reip = qdns.domain_to_ip('8.8.8.8',name)    #DNServer
                     toip = reip[0] if 0 < len(reip) else None
                     ifrom = "sev"
-                    if not toip != True :
-                        sev.redisaddname(name, toip)
-                    else :
-                        print '--------------------------------'
-                        print 'get ip NONE'
-                        print 'client_address,hostname,toip'
-                        print self.client_address
-                        print name
-                        print toip
-                        print '--------------------------------'
+                    sev.redisaddname(name, toip)
                 except Exception, e:
                     print '--------------------------------'
                     print 'get ip fail'
