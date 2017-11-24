@@ -79,7 +79,7 @@ class SinDNSUDPHandler(SocketServer.BaseRequestHandler):
         socket = self.request[1]
         if(dns.query.type==1):
             name = dns.getname();
-            toip = 'None'
+            toip = None
             ifrom = "map"
             if (int(rs.exists(name)) == 1):
                 toip = str(rs.get(name))
@@ -88,9 +88,19 @@ class SinDNSUDPHandler(SocketServer.BaseRequestHandler):
                     qdns = query_DNS
                     #reip = qdns.domain_to_ip('8.8.8.8','www.baidu.com')
                     reip = qdns.domain_to_ip('8.8.8.8',name)    #DNServer
-                    toip = reip[0] if 0 < len(reip) else None
-                    ifrom = "sev"
-                    sev.redisaddname(name, toip)
+                    lenreip = len(reip)
+                    if lenreip :
+                        toip = reip[0] if 0 < lenreip else None
+                        ifrom = "sev"
+                        sev.redisaddname(name, toip)
+                    else :
+                        print '--------------------------------'
+                        print 'Null HostIP'
+                        print 'client_address,hostname,toip'
+                        print self.client_address
+                        print name
+                        print toip
+                        print '--------------------------------'
                 except Exception, e:
                     print '--------------------------------'
                     print 'get ip fail'
@@ -114,8 +124,16 @@ class SinDNSServer:
         self.host = host
     def redisaddname(self, name, ip):
         outTime = '600' #second
-        rs.set(name,ip)
-        rs.expire(name,outTime)
+        if re.match(r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", ip):
+            rs.set(name,ip)
+            rs.expire(name,outTime)
+        else:
+            print '--------------------------------'
+            print "IP invaild"
+            print 'hostname,toip'
+            print name
+            print toip
+            print '--------------------------------'
     def start(self):
         print 'host: '+self.host+' , port: '+str(self.port)
         HOST, PORT = self.host, self.port
